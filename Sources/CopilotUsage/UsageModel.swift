@@ -9,15 +9,18 @@ final class UsageModel {
     private(set) var error: UsageError?
     private(set) var lastUpdated: Date?
     private(set) var hasToken = false
+    private(set) var history = History()
 
     private let client = UsageClient(userAgent: "CopilotUsage/\(appVersion)")
     private let store = TokenStore()
+    private let historyStore = HistoryStore()
     private var token: String?
     private var isRefreshing = false
 
     init() {
         token = store.read()
         hasToken = token != nil
+        history = historyStore.load()
         startRefreshLoop()
         refreshOnWake()
     }
@@ -25,7 +28,16 @@ final class UsageModel {
     var title: String {
         if let usage { return Formatting.title(for: usage) }
         if !hasToken { return "Copilot: set token" }
-        return error == nil ? "Copilot …" : "Copilot ⚠︎"
+        return error == nil ? "Copilot …" : "Copilot"
+    }
+
+    var showsWarning: Bool {
+        if usage == nil { return error != nil }
+        return forecast?.onTrack == false
+    }
+
+    var forecast: Forecast? {
+        usage.flatMap { Forecast.make(usage: $0, history: history) }
     }
 
     func refresh() async {
@@ -36,9 +48,7 @@ final class UsageModel {
         do {
             let fetched = try await client.fetch(token: token)
             guard token == self.token else { return }
-            usage = fetched
-            error = nil
-            lastUpdated = .now
+            apply(fetched)
         } catch {
             guard token == self.token else { return }
             self.error = error
@@ -54,9 +64,21 @@ final class UsageModel {
         guard store.save(trimmed) else { throw .keychain }
         token = trimmed
         hasToken = true
+        apply(fetched)
+    }
+
+    func clearHistory() {
+        history = History()
+        historyStore.delete()
+    }
+
+    private func apply(_ fetched: Usage) {
         usage = fetched
         error = nil
         lastUpdated = .now
+        let previous = history
+        history.record(fetched)
+        if history != previous { historyStore.save(history) }
     }
 
     func removeToken() {

@@ -20,4 +20,20 @@ public enum Formatting {
         style.timeZone = TimeZone(identifier: "UTC")!
         return date.formatted(style)
     }
+
+    public static func perDay(_ value: Double, locale: Locale = .current) -> String {
+        "~\(count(Int(value.rounded()), locale: locale))/day"
+    }
+
+    public static func day(_ date: Date, locale: Locale = .current, timeZone: TimeZone = .current) -> String {
+        var style = Date.FormatStyle(locale: locale).month(.abbreviated).day()
+        style.timeZone = timeZone
+        return date.formatted(style)
+    }
+
+    public static func sparkline(_ values: [Int]) -> String {
+        let blocks = Array("▁▂▃▄▅▆▇█")
+        guard let max = values.max(), max > 0 else { return String(repeating: blocks[0], count: values.count) }
+        return String(values.map { blocks[Int((Double(Swift.max($0, 0)) / Double(max) * 7).rounded())] })
+    }
 }

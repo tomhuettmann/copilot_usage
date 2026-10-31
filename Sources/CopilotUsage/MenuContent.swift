@@ -16,10 +16,26 @@ struct MenuContent: View {
             if let resetDate = usage.resetDate {
                 Text("Resets: \(Formatting.resetDate(resetDate))")
             }
+            if let forecast = model.forecast, usage.remaining > 0 {
+                Text("Budget: \(Formatting.count(forecast.dailyBudget))/day until reset")
+                if let runOutDate = forecast.runOutDate {
+                    Text("Pace: \(Formatting.perDay(forecast.averagePerDay)) · runs out \(Formatting.day(runOutDate))")
+                } else {
+                    Text("Pace: \(Formatting.perDay(forecast.averagePerDay)) · lasts until reset")
+                }
+            }
+        }
+
+        if !model.history.isEmpty {
+            Divider()
+            Button(historyLabel) {
+                openWindow(id: HistoryView.windowID)
+                NSApp.activate()
+            }
         }
 
         if let error = model.error {
-            Text("⚠︎ \(error.message)")
+            Text(error.message)
         }
 
         if let lastUpdated = model.lastUpdated {
@@ -54,5 +70,12 @@ struct MenuContent: View {
 
         Button("Quit CopilotUsage") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    private var historyLabel: String {
+        guard model.history.samples.count > 1 else { return "History…" }
+        let days = model.history.daily(days: 14).map(\.used)
+        let lastWeek = model.history.used(from: .now.addingTimeInterval(-7 * 86400))
+        return "\(Formatting.sparkline(days))  \(Formatting.count(lastWeek)) last 7 days"
     }
 }
