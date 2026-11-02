@@ -74,8 +74,7 @@ struct MenuContent: View {
 
     private var historyLabel: String {
         guard model.history.samples.count > 1 else { return "History…" }
-        let days = model.history.daily(days: 14).map(\.used)
-        let lastWeek = model.history.used(from: .now.addingTimeInterval(-7 * 86400))
-        return "\(Formatting.sparkline(days))  \(Formatting.count(lastWeek)) last 7 days"
+        let days = model.history.daily(days: 7).map(\.used)
+        return "\(Formatting.sparkline(days))  \(Formatting.count(days.reduce(0, +))) last 7 days"
     }
 }

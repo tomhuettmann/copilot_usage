@@ -16,7 +16,7 @@ A tiny native macOS menu bar app to keep an eye on your GitHub Copilot premium r
                                  │ Budget: 1,043/day until reset      │
                                  │ Pace: ~380/day · lasts until reset │
                                  │ ────────────────────────────────── │
-                                 │ ▁▂▁▃▅▂▁▁▄▆▃▂▅▇  1,240 last 7 days  │
+                                 │ ▁▂▁▃▅▂▇  1,240 last 7 days         │
                                  │ Updated: 10:41                     │
                                  │ ────────────────────────────────── │
                                  │ Refresh Now                     ⌘R │
@@ -33,7 +33,7 @@ A tiny native macOS menu bar app to keep an eye on your GitHub Copilot premium r
 - **Always Visible**: Used and total premium requests right in your menu bar
 - **Stays Current**: Updates every 5 minutes, after waking from sleep, or on demand
 - **Forecast**: Daily budget until the reset and whether your current pace lasts, with a warning icon in the menu bar if it does not
-- **History**: Sparkline of the last 14 days in the menu, charts per month in a separate window
+- **History**: Sparkline of the last 7 days in the menu, charts per month in a separate window
 - **Secure Token Storage**: Your GitHub token lives in the macOS keychain, never in a file
 - **Starts at Login**: Runs as a Homebrew service, no Dock icon
 - **Lightweight**: Native Swift and SwiftUI, no dependencies, ~300 KB binary
