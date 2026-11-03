@@ -10,12 +10,21 @@ final class UsageModel {
     private(set) var lastUpdated: Date?
     private(set) var hasToken = false
     private(set) var history = History()
+    var menuBarMode: MenuBarMode = UsageModel.savedMenuBarMode() {
+        didSet { UserDefaults.standard.set(menuBarMode.rawValue, forKey: UsageModel.menuBarModeKey) }
+    }
 
     private let client = UsageClient(userAgent: "CopilotUsage/\(appVersion)")
     private let store = TokenStore()
     private let historyStore = HistoryStore()
     private var token: String?
     private(set) var isRefreshing = false
+
+    private static let menuBarModeKey = "menuBarMode"
+
+    private static func savedMenuBarMode() -> MenuBarMode {
+        UserDefaults.standard.string(forKey: menuBarModeKey).flatMap(MenuBarMode.init) ?? .default
+    }
 
     init() {
         token = store.read()
@@ -26,7 +35,7 @@ final class UsageModel {
     }
 
     var title: String {
-        if let usage { return Formatting.title(for: usage) }
+        if let usage { return Formatting.title(for: usage, mode: menuBarMode) }
         if !hasToken { return "Copilot: set token" }
         return error == nil ? "Copilot …" : "Copilot"
     }

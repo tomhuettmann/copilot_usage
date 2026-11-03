@@ -1,9 +1,22 @@
 import Foundation
 
 public enum Formatting {
-    public static func title(for usage: Usage, locale: Locale = .current) -> String {
+    public static func title(for usage: Usage, mode: MenuBarMode = .default, locale: Locale = .current) -> String {
         if usage.unlimited { return "∞" }
-        return "\(count(usage.used, locale: locale)) / \(count(usage.entitlement, locale: locale))"
+
+        let remainingPercent = min(max(usage.percentRemaining, 0), 100)
+        let value: String
+        switch mode {
+        case .usedRequests:
+            value = count(usage.used, locale: locale)
+        case .remainingRequests:
+            value = count(max(usage.remaining, 0), locale: locale)
+        case .usedPercentage:
+            value = wholePercent(100 - remainingPercent, locale: locale)
+        case .remainingPercentage:
+            value = wholePercent(remainingPercent, locale: locale)
+        }
+        return "\(value) / \(count(usage.entitlement, locale: locale))"
     }
 
     public static func count(_ value: Int, locale: Locale = .current) -> String {
@@ -12,6 +25,11 @@ public enum Formatting {
 
     public static func percent(_ value: Double, locale: Locale = .current) -> String {
         (value / 100).formatted(.percent.precision(.fractionLength(0...1)).locale(locale))
+    }
+
+    /// Always "63%", without the locale's space before the sign.
+    private static func wholePercent(_ value: Double, locale: Locale) -> String {
+        "\(count(Int(value.rounded()), locale: locale))%"
     }
 
     public static func resetsIn(days: Double) -> String {
