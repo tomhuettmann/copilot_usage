@@ -55,7 +55,7 @@ import Testing
             Sample(date: day0.addingTimeInterval(2 * hour), used: 30, entitlement: 1000, resetDate: reset),
             Sample(date: day0.addingTimeInterval(50 * hour), used: 40, entitlement: 1000, resetDate: reset),
         ])
-        let daily = history.daily(days: 3, endingAt: day0.addingTimeInterval(50 * hour), calendar: calendar)
+        let daily = history.daily(from: day0, to: day0.addingTimeInterval(52 * hour), calendar: calendar)
         #expect(daily.map(\.used) == [30, 0, 10])
         #expect(daily.first?.day == day0)
     }
@@ -78,11 +78,5 @@ import Testing
         try Data("nope".utf8).write(to: url)
         defer { try? FileManager.default.removeItem(at: url) }
         #expect(HistoryStore(url: url).load().isEmpty)
-    }
-
-    @Test func sparkline() {
-        #expect(Formatting.sparkline([]) == "")
-        #expect(Formatting.sparkline([0, 0]) == "▁▁")
-        #expect(Formatting.sparkline([0, 1, 2, 7]) == "▁▂▃█")
     }
 }

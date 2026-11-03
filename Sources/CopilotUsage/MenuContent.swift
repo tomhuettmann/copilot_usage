@@ -1,80 +1,42 @@
-import AppKit
 import CopilotUsageCore
 import SwiftUI
 
 struct MenuContent: View {
     let model: UsageModel
-    @Environment(\.openWindow) private var openWindow
+    @State private var showsSettings = false
 
     var body: some View {
-        if let usage = model.usage {
-            if usage.unlimited {
-                Text("Unlimited premium requests")
+        Group {
+            if !model.hasToken {
+                onboarding
+            } else if showsSettings {
+                SettingsView(model: model) { showsSettings = false }
             } else {
-                Text("Remaining: \(Formatting.count(usage.remaining)) – \(Formatting.percent(usage.percentRemaining))")
-            }
-            if let resetDate = usage.resetDate {
-                Text("Resets: \(Formatting.resetDate(resetDate))")
-            }
-            if let forecast = model.forecast, usage.remaining > 0 {
-                Text("Budget: \(Formatting.count(forecast.dailyBudget))/day until reset")
-                if let runOutDate = forecast.runOutDate {
-                    Text("Pace: \(Formatting.perDay(forecast.averagePerDay)) · runs out \(Formatting.day(runOutDate))")
-                } else {
-                    Text("Pace: \(Formatting.perDay(forecast.averagePerDay)) · lasts until reset")
-                }
+                dashboard
             }
         }
-
-        if !model.history.isEmpty {
-            Divider()
-            Button(historyLabel) {
-                openWindow(id: HistoryView.windowID)
-                NSApp.activate()
-            }
-        }
-
-        if let error = model.error {
-            Text(error.message)
-        }
-
-        if let lastUpdated = model.lastUpdated {
-            Text("Updated: \(lastUpdated.formatted(date: .omitted, time: .shortened))")
-        }
-
-        if !model.hasToken {
-            Text("No GitHub token set")
-        }
-
-        Divider()
-
-        if model.hasToken {
-            Button("Refresh Now") {
-                Task { await model.refresh() }
-            }
-            .keyboardShortcut("r")
-        }
-
-        Button(model.hasToken ? "Change Token…" : "Set Token…") {
-            openWindow(id: TokenView.windowID)
-            NSApp.activate()
-        }
-
-        if model.hasToken {
-            Button("Remove Token") { model.removeToken() }
-        }
-
-        Divider()
-
-        Text("CopilotUsage \(appVersion)")
-
-        Button("Quit CopilotUsage") { NSApp.terminate(nil) }
-            .keyboardShortcut("q")
+        .padding(12)
+        .frame(width: 360, alignment: .leading)
+        .onDisappear { showsSettings = false }
     }
 
-    private var historyLabel: String {
-        guard model.history.samples.count > 1 else { return "History…" }
-        let days = model.history.daily(days: 7).map(\.used)
-        return "\(Formatting.sparkline(days))  \(Formatting.count(days.reduce(0, +))) last 7 days"
+    private var dashboard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            UsageHeaderView(model: model)
+
+            if let usage = model.usage, !usage.unlimited {
+                StatTiles(usage: usage, forecast: model.forecast)
+                UsageChartView(model: model)
+            }
+
+            FooterBar(model: model) { showsSettings = true }
+        }
+    }
+
+    private var onboarding: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            TokenView(model: model) {}
+            FooterBar(model: model) {}
+        }
     }
 }

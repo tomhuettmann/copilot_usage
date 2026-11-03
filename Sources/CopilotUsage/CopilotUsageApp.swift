@@ -22,15 +22,6 @@ struct CopilotUsageApp: App {
                 Text(model.title)
             }
         }
-
-        Window("CopilotUsage", id: TokenView.windowID) {
-            TokenView(model: model)
-        }
-        .windowResizability(.contentSize)
-
-        Window("Copilot History", id: HistoryView.windowID) {
-            HistoryView(model: model)
-        }
-        .windowResizability(.contentSize)
+        .menuBarExtraStyle(.window)
     }
 }

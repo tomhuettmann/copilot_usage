@@ -15,7 +15,7 @@ final class UsageModel {
     private let store = TokenStore()
     private let historyStore = HistoryStore()
     private var token: String?
-    private var isRefreshing = false
+    private(set) var isRefreshing = false
 
     init() {
         token = store.read()
@@ -34,6 +34,10 @@ final class UsageModel {
     var showsWarning: Bool {
         if usage == nil { return error != nil }
         return forecast?.onTrack == false
+    }
+
+    var status: UsageStatus? {
+        usage.flatMap { $0.status(forecast: forecast) }
     }
 
     var forecast: Forecast? {

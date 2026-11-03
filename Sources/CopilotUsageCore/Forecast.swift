@@ -2,6 +2,9 @@ import Foundation
 
 public struct Forecast: Sendable, Equatable {
     public let periodStart: Date
+    public let resetDate: Date
+    /// Share of the period that has passed, from 0 to 1.
+    public let elapsedFraction: Double
     public let daysRemaining: Double
     /// Recent requests per day, based on the last 7 days of history or the period average.
     public let averagePerDay: Double
@@ -33,8 +36,12 @@ public struct Forecast: Sendable, Equatable {
             runOutDate = nil
         }
 
+        let total = reset.timeIntervalSince(periodStart)
+
         return Forecast(
             periodStart: periodStart,
+            resetDate: reset,
+            elapsedFraction: total > 0 ? min(max(elapsed / total, 0), 1) : 1,
             daysRemaining: daysRemaining,
             averagePerDay: rate,
             projectedUsed: usage.used + Int((rate * daysRemaining).rounded()),

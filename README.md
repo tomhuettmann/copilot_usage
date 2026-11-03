@@ -9,34 +9,36 @@ A tiny native macOS menu bar app to keep an eye on your GitHub Copilot premium r
 ## Preview
 
 ```
-                                   3,741 / 10,000   100% 🔋   Fri 10:42
-                                 ┌────────────────────────────────────┐
-                                 │ Remaining: 6,259 – 62.6%           │
-                                 │ Resets: Nov 1, 2026                │
-                                 │ Budget: 1,043/day until reset      │
-                                 │ Pace: ~380/day · lasts until reset │
-                                 │ ────────────────────────────────── │
-                                 │ ▁▂▁▃▅▂▇  1,240 last 7 days         │
-                                 │ Updated: 10:41                     │
-                                 │ ────────────────────────────────── │
-                                 │ Refresh Now                     ⌘R │
-                                 │ Change Token…                      │
-                                 │ Remove Token                       │
-                                 │ ────────────────────────────────── │
-                                 │ CopilotUsage 1.0.0                 │
-                                 │ Quit CopilotUsage               ⌘Q │
-                                 └────────────────────────────────────┘
+                                   3,741 / 10,000
+                                 ┌──────────────────────────────────────────┐
+                                 │ ● On track · resets in 12 days           │
+                                 │ ▓▓▓▓▓▓▓▓▓░░░░░░░░░│░░░░░░░░░░░░░         │
+                                 │ 3,741 / 10,000 · 37.4% used              │
+                                 │                                          │
+                                 │ ┌─────────┐ ┌─────────┐ ┌─────────┐      │
+                                 │ │Remaining│ │ Budget  │ │  Pace   │      │
+                                 │ │  6,259  │ │ 521/day │ │ 312/day │      │
+                                 │ └─────────┘ └─────────┘ └─────────┘      │
+                                 │                                          │
+                                 │ [ Cumulative | Per Day ]                 │
+                                 │       (chart with quota line             │
+                                 │        and projection)                   │
+                                 │        ‹  October 2026  ›                │
+                                 │                                          │
+                                 │ ↻  ⚙  ⏻                 Updated 10:41    │
+                                 └──────────────────────────────────────────┘
 ```
 
 ## Features
 
 - **Always Visible**: Used and total premium requests right in your menu bar
 - **Stays Current**: Updates every 5 minutes, after waking from sleep, or on demand
+- **Status at a Glance**: A progress bar with a marker for how much of the month has passed, plus a one-line status
 - **Forecast**: Daily budget until the reset and whether your current pace lasts, with a warning icon in the menu bar if it does not
-- **History**: Sparkline of the last 7 days in the menu, charts per month in a separate window
+- **History**: Charts of your usage per month right in the menu
 - **Secure Token Storage**: Your GitHub token lives in the macOS keychain, never in a file
 - **Starts at Login**: Runs as a Homebrew service, no Dock icon
-- **Lightweight**: Native Swift and SwiftUI, no dependencies, ~300 KB binary
+- **Lightweight**: Native Swift and SwiftUI, no dependencies, under 1 MB binary
 
 ## Installation
 
@@ -60,9 +62,10 @@ swift build -c release
 
 ### Token
 
-On first start the menu bar shows **Copilot: set token**. Open it, choose **Set Token…** and paste a
+On first start the menu bar shows **Copilot: set token**. Open it and paste a
 personal access token (classic) from [github.com/settings/tokens](https://github.com/settings/tokens).
 No scopes are needed. The token is checked against GitHub before it is saved to your login keychain.
+You can change or remove it later in the settings (⚙).
 
 CopilotUsage is not signed with an Apple Developer ID, so macOS treats every new version as a new app.
 After an update you are asked once whether CopilotUsage may access its keychain entry — choose
@@ -72,11 +75,12 @@ After an update you are asked once whether CopilotUsage may access its keychain 
 
 The menu shows how many requests per day you can use until the quota resets and whether your current
 pace lasts. The pace is based on the last 7 days, or on the average of the month while there is not
-enough history yet.
+enough history yet. The status turns orange when the projection ends above 90% of your quota and red
+when the quota runs out before the reset.
 
 Every update is recorded in `~/Library/Application Support/CopilotUsage/history.json` (kept for 100 days).
-Click the sparkline in the menu to open the history window with charts per month. Use **Clear History…**
-there to delete all recorded samples.
+The chart in the menu shows the current month and, with the arrows, earlier months. Use **Clear History…**
+in the settings (⚙) to delete all recorded samples.
 
 ### Commands
 
@@ -93,7 +97,7 @@ Logs are written to `$(brew --prefix)/var/log/copilot-usage.log`.
 ### Uninstall
 
 Homebrew cannot remove data created by the app. Before `brew uninstall copilot-usage`, choose
-**Remove Token** in the menu and **Clear History…** in the history window. If you forgot, remove it manually:
+**Remove Token** and **Clear History…** in the settings (⚙). If you forgot, remove it manually:
 
 ```bash
 security delete-generic-password -s CopilotUsage -a github-token
@@ -111,7 +115,8 @@ rm -rf ~/Library/Application\ Support/CopilotUsage
 1. Reads your token from the login keychain
 2. Fetches your Copilot quota from `api.github.com/copilot_internal/user`
 3. Shows used and total premium requests in the menu bar
-4. Repeats every 5 minutes and after your Mac wakes up
+4. Records each update to build the history and the forecast
+5. Repeats every 5 minutes and after your Mac wakes up
 
 The endpoint is not officially documented by GitHub and may change.
 

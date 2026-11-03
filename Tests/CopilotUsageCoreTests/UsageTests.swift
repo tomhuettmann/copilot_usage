@@ -58,9 +58,4 @@ import Testing
         #expect(Formatting.percent(62.6, locale: enUS) == "62.6%")
         #expect(Formatting.percent(100, locale: enUS) == "100%")
     }
-
-    @Test func formatsResetDateInUTC() {
-        let date = Date(timeIntervalSince1970: 1_793_491_200) // 2026-11-01T00:00:00Z
-        #expect(Formatting.resetDate(date, locale: enUS) == "Nov 1, 2026")
-    }
 }

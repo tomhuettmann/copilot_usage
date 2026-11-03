@@ -80,3 +80,76 @@ import Testing
         #expect(forecast.periodStart == Date(timeIntervalSince1970: 1_801_440_000)) // 2027-02-01
     }
 }
+
+@Suite struct StatusTests {
+    private let reset = Date(timeIntervalSince1970: 1_793_491_200)
+    private let periodStart = Date(timeIntervalSince1970: 1_790_812_800)
+    private let day: TimeInterval = 86400
+    private let enUS = Locale(identifier: "en_US")
+    private let utc = TimeZone(identifier: "UTC")!
+
+    private func usage(used: Int) -> Usage {
+        Usage(entitlement: 1000, remaining: 1000 - used, percentRemaining: 0, unlimited: false, resetDate: reset)
+    }
+
+    private func status(used: Int, daysIn: Double = 10) -> UsageStatus? {
+        let usage = usage(used: used)
+        let forecast = Forecast.make(usage: usage, now: periodStart.addingTimeInterval(daysIn * day))
+        return usage.status(forecast: forecast)
+    }
+
+    private func line(used: Int, daysIn: Double = 10) -> String {
+        let usage = usage(used: used)
+        let forecast = Forecast.make(usage: usage, now: periodStart.addingTimeInterval(daysIn * day))
+        return Formatting.statusLine(for: usage, forecast: forecast, locale: enUS, timeZone: utc)
+    }
+
+    @Test func elapsedFraction() throws {
+        let forecast = try #require(Forecast.make(usage: usage(used: 100), now: periodStart.addingTimeInterval(10 * day)))
+        #expect(forecast.elapsedFraction == 10.0 / 31.0)
+        #expect(forecast.resetDate == reset)
+
+        let late = try #require(Forecast.make(usage: usage(used: 100), now: reset.addingTimeInterval(day)))
+        #expect(late.elapsedFraction == 1)
+    }
+
+    @Test func statusLevels() {
+        #expect(status(used: 200) == .onTrack)
+        #expect(status(used: 300) == .tight)
+        #expect(status(used: 500) == .behind)
+        #expect(status(used: 1000) == .exhausted)
+        #expect(status(used: 1200) == .exhausted)
+    }
+
+    @Test func noStatusWithoutDataOrForUnlimited() {
+        #expect(status(used: 0, daysIn: 0.05) == nil)
+        let unlimited = Usage(entitlement: 0, remaining: 0, percentRemaining: 100, unlimited: true, resetDate: reset)
+        #expect(unlimited.status(forecast: nil) == nil)
+    }
+
+    @Test func exhaustedWinsOverMissingForecast() {
+        let usage = usage(used: 1000)
+        #expect(usage.status(forecast: nil) == .exhausted)
+    }
+
+    @Test func statusLines() {
+        #expect(line(used: 200) == "On track · resets in 21 days")
+        #expect(line(used: 300) == "Tight · projected 93% by reset")
+        #expect(line(used: 500) == "Runs out Oct 21 · 11 days early")
+        #expect(line(used: 1000) == "Quota used up · resets Nov 1")
+        #expect(line(used: 0, daysIn: 0.05) == "Collecting data…")
+    }
+
+    @Test func unlimitedLine() {
+        let unlimited = Usage(entitlement: 0, remaining: 0, percentRemaining: 100, unlimited: true, resetDate: reset)
+        #expect(Formatting.statusLine(for: unlimited, forecast: nil) == "Unlimited premium requests")
+    }
+
+    @Test func resetsInFormatting() {
+        #expect(Formatting.resetsIn(days: 21) == "resets in 21 days")
+        #expect(Formatting.resetsIn(days: 1) == "resets in 1 day")
+        #expect(Formatting.resetsIn(days: 1.2) == "resets in 2 days")
+        #expect(Formatting.resetsIn(days: 0.5) == "resets in 12 hours")
+        #expect(Formatting.resetsIn(days: 0.01) == "resets in 1 hour")
+    }
+}

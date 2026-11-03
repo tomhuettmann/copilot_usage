@@ -14,26 +14,43 @@ public enum Formatting {
         (value / 100).formatted(.percent.precision(.fractionLength(0...1)).locale(locale))
     }
 
-    /// The reset date is a UTC midnight, so it is formatted in UTC to show the intended day everywhere.
-    public static func resetDate(_ date: Date, locale: Locale = .current) -> String {
-        var style = Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale)
-        style.timeZone = TimeZone(identifier: "UTC")!
-        return date.formatted(style)
+    public static func resetsIn(days: Double) -> String {
+        if days < 1 {
+            let hours = max(Int((days * 24).rounded(.up)), 1)
+            return "resets in \(hours) \(hours == 1 ? "hour" : "hours")"
+        }
+        let count = Int(days.rounded(.up))
+        return "resets in \(count) \(count == 1 ? "day" : "days")"
     }
 
-    public static func perDay(_ value: Double, locale: Locale = .current) -> String {
-        "~\(count(Int(value.rounded()), locale: locale))/day"
+    /// One sentence about where the usage stands, shown at the top of the menu.
+    public static func statusLine(
+        for usage: Usage, forecast: Forecast?, locale: Locale = .current, timeZone: TimeZone = .current
+    ) -> String {
+        if usage.unlimited { return "Unlimited premium requests" }
+
+        switch usage.status(forecast: forecast) {
+        case nil:
+            return "Collecting data…"
+        case .exhausted:
+            guard let reset = usage.resetDate else { return "Quota used up" }
+            return "Quota used up · resets \(day(reset, locale: locale, timeZone: TimeZone(identifier: "UTC")!))"
+        case .behind:
+            guard let forecast, let runOut = forecast.runOutDate else { return "Runs out before reset" }
+            let daysEarly = max(Int((forecast.resetDate.timeIntervalSince(runOut) / 86400).rounded(.up)), 1)
+            return "Runs out \(day(runOut, locale: locale, timeZone: timeZone)) · \(daysEarly) \(daysEarly == 1 ? "day" : "days") early"
+        case .tight:
+            let projected = Double(forecast?.projectedUsed ?? 0) / Double(usage.entitlement) * 100
+            return "Tight · projected \(Int(projected.rounded()))% by reset"
+        case .onTrack:
+            guard let forecast else { return "On track" }
+            return "On track · \(resetsIn(days: forecast.daysRemaining))"
+        }
     }
 
     public static func day(_ date: Date, locale: Locale = .current, timeZone: TimeZone = .current) -> String {
         var style = Date.FormatStyle(locale: locale).month(.abbreviated).day()
         style.timeZone = timeZone
         return date.formatted(style)
-    }
-
-    public static func sparkline(_ values: [Int]) -> String {
-        let blocks = Array("▁▂▃▄▅▆▇█")
-        guard let max = values.max(), max > 0 else { return String(repeating: blocks[0], count: values.count) }
-        return String(values.map { blocks[Int((Double(Swift.max($0, 0)) / Double(max) * 7).rounded())] })
     }
 }

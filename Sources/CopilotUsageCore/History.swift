@@ -51,13 +51,6 @@ public struct History: Codable, Sendable, Equatable {
         deltas.filter { $0.date > start && $0.date <= end }.reduce(0) { $0 + $1.used }
     }
 
-    /// Requests used per calendar day for the `days` days ending with the day of `end`, oldest first.
-    public func daily(days: Int, endingAt end: Date = .now, calendar: Calendar = .current) -> [(day: Date, used: Int)] {
-        let lastDay = calendar.startOfDay(for: end)
-        let days = (0..<days).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: lastDay) }
-        return daily(for: days, calendar: calendar)
-    }
-
     /// Requests used per calendar day between `start` and `end`, oldest first.
     public func daily(from start: Date, to end: Date, calendar: Calendar = .current) -> [(day: Date, used: Int)] {
         var days: [Date] = []
