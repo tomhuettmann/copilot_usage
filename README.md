@@ -136,5 +136,5 @@ MIT — see [LICENSE](LICENSE).
 
 ## Authors
 
-Tom Hüttmann — [@tomhuettmann](https://github.com/tomhuettmann)
-Henry Pratsch — [@henrypratsch](https://github.com/henrypratsch)
+- Tom Hüttmann — [@tomhuettmann](https://github.com/tomhuettmann)
+- Henry Pratsch — [@henrypratsch](https://github.com/henrypratsch)
