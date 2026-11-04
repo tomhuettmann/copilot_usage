@@ -14,6 +14,10 @@ final class UsageModel {
         didSet { UserDefaults.standard.set(menuBarMode.rawValue, forKey: UsageModel.menuBarModeKey) }
     }
 
+    var showsForecastWarning: Bool = UsageModel.savedShowsForecastWarning() {
+        didSet { UserDefaults.standard.set(showsForecastWarning, forKey: UsageModel.showsForecastWarningKey) }
+    }
+
     private let client = UsageClient(userAgent: "CopilotUsage/\(appVersion)")
     private let store = TokenStore()
     private let historyStore = HistoryStore()
@@ -24,6 +28,12 @@ final class UsageModel {
 
     private static func savedMenuBarMode() -> MenuBarMode {
         UserDefaults.standard.string(forKey: menuBarModeKey).flatMap(MenuBarMode.init) ?? .default
+    }
+
+    private static let showsForecastWarningKey = "showsForecastWarning"
+
+    private static func savedShowsForecastWarning() -> Bool {
+        UserDefaults.standard.object(forKey: showsForecastWarningKey) as? Bool ?? true
     }
 
     init() {
@@ -42,7 +52,7 @@ final class UsageModel {
 
     var showsWarning: Bool {
         if usage == nil { return error != nil }
-        return forecast?.onTrack == false
+        return showsForecastWarning && forecast?.onTrack == false
     }
 
     var status: UsageStatus? {

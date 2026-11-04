@@ -20,6 +20,8 @@ struct SettingsView: View {
                     ForEach(MenuBarMode.allCases) { mode in
                         menuBarRow(mode)
                     }
+                    warningRow
+                        .padding(.top, 8)
                 }
             }
 
@@ -88,6 +90,23 @@ struct SettingsView: View {
         }
         .buttonStyle(MenuRowStyle())
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var warningRow: some View {
+        let isOn = model.showsForecastWarning
+        return Button { model.showsForecastWarning.toggle() } label: {
+            HStack {
+                Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
+                Text("Show warning when over budget").font(.appBody)
+                Spacer()
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.appBody)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .buttonStyle(MenuRowStyle())
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
