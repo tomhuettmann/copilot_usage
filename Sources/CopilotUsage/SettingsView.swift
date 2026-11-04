@@ -2,7 +2,7 @@ import CopilotUsageCore
 import SwiftUI
 
 struct SettingsView: View {
-    let model: UsageModel
+    @Bindable var model: UsageModel
     let onBack: () -> Void
     @State private var editingToken = false
     @State private var confirmClear = false
@@ -14,6 +14,14 @@ struct SettingsView: View {
             }
             .buttonStyle(MenuRowStyle())
             .keyboardShortcut(.cancelAction)
+
+            section("Menu bar") {
+                VStack(spacing: 0) {
+                    ForEach(MenuBarMode.allCases) { mode in
+                        menuBarRow(mode)
+                    }
+                }
+            }
 
             section("Token") {
                 if editingToken {
@@ -61,6 +69,25 @@ struct SettingsView: View {
             editingToken = false
             confirmClear = false
         }
+    }
+
+    private func menuBarRow(_ mode: MenuBarMode) -> some View {
+        let isSelected = model.menuBarMode == mode
+        return Button { model.menuBarMode = mode } label: {
+            HStack {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                Text(mode.label).font(.appBody)
+                Spacer()
+                if let usage = model.usage {
+                    Text(Formatting.title(for: usage, mode: mode))
+                        .font(.appBody.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .buttonStyle(MenuRowStyle())
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
