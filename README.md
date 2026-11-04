@@ -134,6 +134,7 @@ Release a new version with `./create-release.sh <version>`.
 
 MIT — see [LICENSE](LICENSE).
 
-## Author
+## Authors
 
 Tom Hüttmann — [@tomhuettmann](https://github.com/tomhuettmann)
+Henry Pratsch — [@henrypratsch](https://github.com/henrypratsch)
