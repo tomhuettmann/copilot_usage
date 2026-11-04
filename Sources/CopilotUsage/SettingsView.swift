@@ -79,9 +79,11 @@ struct SettingsView: View {
                     .foregroundStyle(isSelected ? Color.accentColor : .secondary)
                 Text(mode.label).font(.appBody)
                 Spacer()
-                Text(Formatting.title(for: model.usage ?? .sample, mode: mode))
-                    .font(.appBody.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                if let usage = model.usage {
+                    Text(Formatting.title(for: usage, mode: mode))
+                        .font(.appBody.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .buttonStyle(MenuRowStyle())
@@ -96,9 +98,4 @@ struct SettingsView: View {
         }
         .padding(.horizontal, 6)
     }
-}
-
-private extension Usage {
-    /// Stands in for real data so that the previews work before the first fetch.
-    static let sample = Usage(entitlement: 300, remaining: 180, percentRemaining: 60, unlimited: false, resetDate: nil)
 }
